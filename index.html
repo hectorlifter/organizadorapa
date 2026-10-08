@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organizador de Trabajos</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="pantalla-login" class="login-pantalla">
+  <form id="form-login" class="login-caja">
+    <h1>Organizador de Trabajos</h1>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" required autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <button type="submit" class="btn btn-primary" id="btn-login">Entrar</button>
+  </form>
+</div>
+
+<div id="app-contenido" class="hidden">
+  <header class="topbar">
+    <h1>Organizador de Trabajos</h1>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button id="btn-nuevo" class="btn btn-primary">+ Nuevo presupuesto</button>
+      <button id="btn-salir" class="btn btn-outline">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="legend">
+      <span class="chip verde">&le; 35 dias sin cobrar</span>
+      <span class="chip amarillo">36 - 45 dias</span>
+      <span class="chip rojo">&gt; 45 dias</span>
+      <span class="chip pagado">Pagado</span>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tabla-trabajos">
+        <thead>
+          <tr>
+            <th>Presupuesto</th>
+            <th>Descripcion</th>
+            <th>Orden de compra</th>
+            <th>Monto</th>
+            <th>Monto c/IVA</th>
+            <th>Factura</th>
+            <th>Estado de pago</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-trabajos">
+          <tr><td colspan="8" class="vacio">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal generico: subir + confirmar documento -->
+  <div id="modal-overlay" class="overlay hidden">
+    <div class="modal" id="modal-box">
+      <div class="modal-head">
+        <h2 id="modal-title">Titulo</h2>
+        <button class="btn-close" id="btn-cerrar-modal">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
