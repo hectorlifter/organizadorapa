@@ -355,3 +355,86 @@ td.vacio, td.muted { color: var(--text-muted); font-style: italic; }
 }
 .toast.hidden { display: none; }
 .toast.error { background: var(--rojo-fg); color: #fff; }
+
+/* ---------- celular: tarjetas compactas ---------- */
+@media (max-width: 720px) {
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .topbar h1 { font-size: 0.9rem; line-height: 1.2; }
+  .topbar .btn { padding: 7px 10px; font-size: 0.78rem; white-space: nowrap; }
+  main { padding: 10px 10px 40px; }
+
+  .legend { gap: 5px; margin-bottom: 10px; }
+  .chip { font-size: 0.68rem; padding: 3px 8px; }
+
+  .table-wrap { background: none; border: none; box-shadow: none; overflow: visible; }
+  table, tbody { display: block; min-width: 0; width: 100%; }
+  thead { display: none; }
+
+  tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "pres estado"
+      "desc desc"
+      "oc   fact"
+      "monto iva"
+      "acc  acc";
+    gap: 4px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { display: block; padding: 0; border: none; min-width: 0; font-size: 0.82rem; }
+  tbody td.vacio { grid-column: 1 / -1; padding: 20px 0 !important; }
+
+  .c-pres { grid-area: pres; font-size: 0.95rem; }
+  .c-estado { grid-area: estado; text-align: right; }
+  .c-desc { grid-area: desc; }
+  .c-oc { grid-area: oc; }
+  .c-fact { grid-area: fact; }
+  .c-monto { grid-area: monto; }
+  .c-iva { grid-area: iva; }
+  .c-acc { grid-area: acc; }
+
+  tbody td.desc-cell {
+    max-width: none; min-width: 0;
+    font-size: 0.8rem; line-height: 1.3;
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  tbody td.desc-cell.abierta { display: block; -webkit-line-clamp: unset; color: var(--text); }
+
+  .c-oc::before, .c-fact::before, .c-monto::before, .c-iva::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 650;
+  }
+  tbody td.num { text-align: left; font-weight: 600; }
+
+  .badge-estado { font-size: 0.72rem; padding: 3px 8px; }
+  .hint { font-size: 0.7rem; color: var(--text-muted); }
+  .btn-link { font-size: 0.74rem; }
+
+  .c-acc, .c-acc .acciones { gap: 5px; }
+  .c-acc { margin-top: 4px; padding-top: 6px !important; border-top: 1px solid var(--border); }
+  .c-acc .btn { padding: 6px 10px; font-size: 0.74rem; }
+
+  /* modales casi a pantalla completa; 16px evita el zoom automatico de iPhone */
+  .overlay { padding: 10px; }
+  .modal-body { padding: 14px; }
+  .field input[type=text], .field input[type=email], .field input[type=password],
+  .field input[type=number], .field input[type=date], .field input[type=file],
+  .field textarea { font-size: 16px; }
+}

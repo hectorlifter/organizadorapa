@@ -357,40 +357,49 @@ function filaTrabajo(job) {
   const tr = document.createElement('tr');
 
   const tdPresupuesto = document.createElement('td');
+  tdPresupuesto.className = 'c-pres';
   const verPresupuesto = docLink(job.id, job.presupuesto.archivo, 'Ver PDF');
   tdPresupuesto.innerHTML = `<strong>${escapeHtml(job.presupuesto.numero)}</strong><div>${verPresupuesto}${job.presupuesto.archivo ? ' · ' + eliminarDocLink(job.id, 'presupuesto') : ''}</div>`;
 
   const tdDesc = document.createElement('td');
-  tdDesc.className = 'desc-cell';
+  tdDesc.className = 'desc-cell c-desc';
   tdDesc.title = job.presupuesto.descripcion || '';
   tdDesc.textContent = job.presupuesto.descripcion || '—';
+  tdDesc.addEventListener('click', () => tdDesc.classList.toggle('abierta'));
 
   const tdOC = document.createElement('td');
+  tdOC.className = 'c-oc';
+  tdOC.dataset.label = 'Orden de compra';
   tdOC.innerHTML = job.ordenCompra
     ? `${escapeHtml(job.ordenCompra.numero)}<div>${docLink(job.id, job.ordenCompra.archivo, 'Ver PDF')}${job.ordenCompra.archivo ? ' · ' : ''}${eliminarDocLink(job.id, 'orden-compra')}</div>`
     : '<span class="muted">—</span>';
 
   const tdMonto = document.createElement('td');
-  tdMonto.className = 'num';
+  tdMonto.className = 'num c-monto';
+  tdMonto.dataset.label = 'Monto';
   tdMonto.textContent = fmtMonto(job.presupuesto.monto);
 
   const tdMontoIva = document.createElement('td');
-  tdMontoIva.className = 'num';
+  tdMontoIva.className = 'num c-iva';
+  tdMontoIva.dataset.label = 'Monto c/IVA';
   const montoIvaMostrado = (job.factura && job.factura.monto !== null && job.factura.monto !== undefined)
     ? job.factura.monto
     : job.presupuesto.montoIva;
   tdMontoIva.textContent = fmtMonto(montoIvaMostrado);
 
   const tdFactura = document.createElement('td');
+  tdFactura.className = 'c-fact';
+  tdFactura.dataset.label = 'Factura';
   tdFactura.innerHTML = job.factura
     ? `<strong>${escapeHtml(job.factura.numero || '—')}</strong><div class="hint">${fmtFecha(job.factura.fecha)}</div><div>${docLink(job.id, job.factura.archivo, 'Ver PDF')}${job.factura.archivo ? ' · ' : ''}${eliminarDocLink(job.id, 'factura')}</div>`
     : '<span class="muted">—</span>';
 
   const tdEstado = document.createElement('td');
+  tdEstado.className = 'c-estado';
   tdEstado.innerHTML = badgeEstado(job);
 
   const tdAcciones = document.createElement('td');
-  tdAcciones.className = 'acciones';
+  tdAcciones.className = 'acciones c-acc';
   tdAcciones.appendChild(botonesAccion(job));
 
   tr.append(tdPresupuesto, tdDesc, tdOC, tdMonto, tdMontoIva, tdFactura, tdEstado, tdAcciones);
