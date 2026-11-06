@@ -61,3 +61,37 @@ create policy "pdfs_update_owner" on storage.objects for update
   using (bucket_id = 'pdfs' and is_owner());
 create policy "pdfs_delete_owner" on storage.objects for delete
   using (bucket_id = 'pdfs' and is_owner());
+
+-- ---------------------------------------------------------------------------
+-- Impuestos y gastos (se puede ejecutar de nuevo sin problema)
+-- Cada fila es un concepto: un porcentaje sobre cada cobro (ingresos brutos, tasas...),
+-- un gasto fijo mensual o un gasto fijo anual. El "vigente_desde/hasta" permite cambiar un
+-- valor sin recalcular lo ya cobrado.
+-- ---------------------------------------------------------------------------
+create table if not exists impuestos_items (
+  id uuid primary key default gen_random_uuid(),
+  creado_en timestamptz not null default now(),
+  nombre text not null check (length(trim(nombre)) > 0),
+  tipo text not null check (tipo in ('porcentaje', 'mensual', 'anual')),
+  valor numeric not null check (valor >= 0),
+  base text not null default 'sin_iva' check (base in ('sin_iva', 'con_iva')),
+  retencion_tipo text check (retencion_tipo in ('iibb', 'ganancias', 'suss')),
+  vigente_desde date not null default current_date,
+  vigente_hasta date check (vigente_hasta is null or vigente_hasta >= vigente_desde),
+  notas text
+);
+
+alter table impuestos_items enable row level security;
+
+grant select, insert, update, delete on impuestos_items to authenticated;
+grant all on impuestos_items to service_role;
+
+drop policy if exists "impuestos_select_owner" on impuestos_items;
+drop policy if exists "impuestos_insert_owner" on impuestos_items;
+drop policy if exists "impuestos_update_owner" on impuestos_items;
+drop policy if exists "impuestos_delete_owner" on impuestos_items;
+
+create policy "impuestos_select_owner" on impuestos_items for select using (is_owner());
+create policy "impuestos_insert_owner" on impuestos_items for insert with check (is_owner());
+create policy "impuestos_update_owner" on impuestos_items for update using (is_owner());
+create policy "impuestos_delete_owner" on impuestos_items for delete using (is_owner());

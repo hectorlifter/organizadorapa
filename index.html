@@ -27,12 +27,15 @@
   <header class="topbar">
     <h1>Organizador de Trabajos</h1>
     <div style="display:flex; gap:10px; align-items:center;">
+      <button id="btn-resumen" class="btn btn-outline">Resumen</button>
+      <button id="btn-impuestos" class="btn btn-outline">Impuestos y gastos</button>
       <button id="btn-nuevo" class="btn btn-primary">+ Nuevo presupuesto</button>
       <button id="btn-salir" class="btn btn-outline">Salir</button>
     </div>
   </header>
 
   <main>
+    <section id="panel-resumen" class="panel-resumen hidden"></section>
     <div class="legend">
       <span class="chip verde">&le; 35 dias sin cobrar</span>
       <span class="chip amarillo">36 - 45 dias</span>
@@ -51,11 +54,12 @@
             <th>Monto c/IVA</th>
             <th>Factura</th>
             <th>Estado de pago</th>
+            <th>Aparta / libre</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="tbody-trabajos">
-          <tr><td colspan="8" class="vacio">Cargando...</td></tr>
+          <tr><td colspan="9" class="vacio">Cargando...</td></tr>
         </tbody>
       </table>
     </div>
