@@ -378,6 +378,7 @@ td.vacio, td.muted { color: var(--text-muted); font-style: italic; }
       "desc desc"
       "oc   fact"
       "monto iva"
+      "aparta aparta"
       "acc  acc";
     gap: 4px 10px;
     background: var(--surface);
@@ -398,6 +399,7 @@ td.vacio, td.muted { color: var(--text-muted); font-style: italic; }
   .c-fact { grid-area: fact; }
   .c-monto { grid-area: monto; }
   .c-iva { grid-area: iva; }
+  .c-aparta { grid-area: aparta; }
   .c-acc { grid-area: acc; }
 
   tbody td.desc-cell {
@@ -412,7 +414,7 @@ td.vacio, td.muted { color: var(--text-muted); font-style: italic; }
   }
   tbody td.desc-cell.abierta { display: block; -webkit-line-clamp: unset; color: var(--text); }
 
-  .c-oc::before, .c-fact::before, .c-monto::before, .c-iva::before {
+  .c-oc::before, .c-fact::before, .c-monto::before, .c-iva::before, .c-aparta::before {
     content: attr(data-label);
     display: block;
     font-size: 0.64rem;
@@ -437,4 +439,78 @@ td.vacio, td.muted { color: var(--text-muted); font-style: italic; }
   .field input[type=text], .field input[type=email], .field input[type=password],
   .field input[type=number], .field input[type=date], .field input[type=file],
   .field textarea { font-size: 16px; }
+}
+
+/* ---------- impuestos y gastos ---------- */
+.c-aparta { font-size: 0.82rem; }
+.c-aparta .aparta-linea { white-space: nowrap; }
+.c-aparta .hint { max-width: 230px; }
+.aparta-linea { color: var(--text-muted); }
+.aparta-linea strong { color: var(--rojo-fg); font-weight: 650; }
+.aparta-linea.libre strong { color: var(--verde-fg); }
+.aparta { cursor: help; }
+
+.field select {
+  width: 100%;
+  font: inherit;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.retenciones { margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; }
+.retenciones-titulo { font-weight: 650; font-size: 0.86rem; margin-bottom: 2px; }
+.retenciones .field { margin-bottom: 10px; }
+
+.conceptos-titulo { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin: 18px 0 6px; }
+.concepto { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.concepto.terminado { opacity: 0.55; }
+.concepto-botones { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.conceptos .form-actions { margin-top: 18px; }
+
+.panel-resumen {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.resumen-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.resumen-cabecera h2 { margin: 0; font-size: 1.05rem; }
+.resumen-controles { display: flex; gap: 8px; }
+.resumen-controles select, .resumen-controles input {
+  font: inherit; padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text);
+}
+.tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.tarjeta { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.tarjeta-titulo { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 650; }
+.tarjeta-monto { font-size: 1.1rem; font-weight: 700; margin-top: 3px; }
+.tarjeta.aparta .tarjeta-monto { color: var(--rojo-fg); }
+.tarjeta.libre { background: var(--verde-bg); border-color: transparent; }
+.tarjeta.libre .tarjeta-monto { color: var(--verde-fg); }
+.resumen-tabla-wrap { overflow-x: auto; margin-bottom: 12px; }
+.resumen-tabla { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.resumen-tabla th, .resumen-tabla td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+.resumen-tabla th.num, .resumen-tabla td.num { text-align: right; }
+.resumen-fijos { font-size: 0.84rem; margin-bottom: 10px; }
+.resumen-fijos strong { display: block; margin-bottom: 3px; }
+
+@media (max-width: 720px) {
+  .panel-resumen { padding: 12px; }
+  .tarjetas { grid-template-columns: 1fr 1fr; }
+  .concepto { flex-direction: column; }
+  /* la barra de arriba pasa a dos renglones en vez de cortar los botones */
+  .topbar { flex-wrap: wrap; }
+  .topbar > div { flex-wrap: wrap; }
+
+  /* las reglas de tarjetas de arriba son para la tabla de trabajos: la del resumen sigue siendo tabla */
+  .resumen-tabla { display: table; min-width: 0; }
+  .resumen-tabla thead { display: table-header-group; }
+  .resumen-tabla tbody { display: table-row-group; min-width: 0; }
+  .resumen-tabla tbody tr { display: table-row; background: none; border: none; box-shadow: none; padding: 0; margin: 0; }
+  .resumen-tabla th, .resumen-tabla tbody td { display: table-cell; padding: 6px 6px; font-size: 0.76rem; border-bottom: 1px solid var(--border); }
+  .resumen-tabla tbody td.num { text-align: right; font-weight: 400; }
 }

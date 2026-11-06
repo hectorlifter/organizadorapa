@@ -1,4 +1,5 @@
 import { extractText, guessCandidates } from './pdf-extract.js';
+import { crearImpuestosUI } from './impuestos-ui.js';
 
 const IVA_RATE = 0.21;
 const BUCKET = 'pdfs';
@@ -50,6 +51,26 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
     pantallaLogin.classList.remove('hidden');
   }
 });
+
+// ---------- impuestos y gastos (impuestos-ui.js) ----------
+// Las funciones de abajo se declaran con "function", así que ya existen cuando esto corre.
+const impuestosUI = crearImpuestosUI({
+  supabase: supabaseClient,
+  panel: document.getElementById('panel-resumen'),
+  toast,
+  abrirModal,
+  cerrarModal,
+  fieldGroup,
+  crearBoton,
+  fmtMonto,
+  fmtFecha,
+  hoyISO,
+  escapeHtml,
+  obtenerJobs: () => jobs,
+  alCambiar: () => { renderTabla(); impuestosUI.renderResumen(); },
+});
+document.getElementById('btn-impuestos').addEventListener('click', () => impuestosUI.abrirModalConceptos());
+document.getElementById('btn-resumen').addEventListener('click', () => impuestosUI.alternarResumen());
 
 // ---------- estado general de la pagina ----------
 
@@ -229,12 +250,13 @@ async function adjuntarFactura(job, { numeroFactura, fechaFactura, montoFactura,
   await actualizarJobData(job.id, row.data);
 }
 
-async function adjuntarOrdenPago(job, { fechaPago, file }) {
+async function adjuntarOrdenPago(job, { fechaPago, file, retenciones }) {
   const row = await obtenerJobRow(job.id);
   const fecha = fechaPago && /^\d{4}-\d{2}-\d{2}$/.test(fechaPago) ? fechaPago : hoyISO();
   let archivo = row.data.pago ? row.data.pago.archivo : null;
   if (file) archivo = await subirArchivo(job.id, DOC_FILENAMES.orden_pago, file);
   row.data.pago = { pagado: true, fecha, archivo };
+  if (retenciones && Object.keys(retenciones).length) row.data.pago.retenciones = retenciones;
   await actualizarJobData(job.id, row.data);
 }
 
@@ -243,6 +265,7 @@ async function editarJob(job, patch) {
   if (patch.presupuesto) row.data.presupuesto = { ...row.data.presupuesto, ...patch.presupuesto };
   if (patch.ordenCompra) row.data.ordenCompra = { ...row.data.ordenCompra, ...patch.ordenCompra };
   if (patch.factura) row.data.factura = { ...row.data.factura, ...patch.factura };
+  if (patch.pago) row.data.pago = { ...row.data.pago, ...patch.pago };
   await actualizarJobData(job.id, row.data);
 }
 
@@ -282,6 +305,8 @@ async function eliminarDocumento(jobId, tipo) {
 }
 
 tbody.addEventListener('click', (e) => {
+  const adjBtn = e.target.closest('[data-adjuntar-oc]');
+  if (adjBtn) { const j = jobs.find((x) => x.id === adjBtn.dataset.jobId); if (j) abrirModalOrdenCompra(j); return; }
   const verBtn = e.target.closest('[data-ver-doc]');
   if (verBtn) { verArchivo(verBtn.dataset.jobId, verBtn.dataset.verDoc); return; }
   const delBtn = e.target.closest('[data-eliminar-doc]');
@@ -314,15 +339,18 @@ async function cargarTrabajos() {
       .map(filaAJob)
       .map(conEstado)
       .sort((a, b) => a.presupuesto.numero.localeCompare(b.presupuesto.numero, undefined, { numeric: true }));
+    // Los impuestos son un agregado: si fallan, los trabajos se ven igual.
+    await impuestosUI.cargar().catch((err) => console.warn('No se pudieron cargar los impuestos:', err.message));
     renderTabla();
+    impuestosUI.renderResumen();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="8" class="vacio">No se pudo cargar: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="vacio">No se pudo cargar: ${err.message}</td></tr>`;
   }
 }
 
 function renderTabla() {
   if (!jobs.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="vacio">Todavia no cargaste ningun presupuesto. Empeza con "+ Nuevo presupuesto".</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="vacio">Todavia no cargaste ningun presupuesto. Empeza con "+ Nuevo presupuesto".</td></tr>';
     return;
   }
   tbody.innerHTML = '';
@@ -371,7 +399,7 @@ function filaTrabajo(job) {
   tdOC.className = 'c-oc';
   tdOC.dataset.label = 'Orden de compra';
   tdOC.innerHTML = job.ordenCompra
-    ? `${escapeHtml(job.ordenCompra.numero)}<div>${docLink(job.id, job.ordenCompra.archivo, 'Ver PDF')}${job.ordenCompra.archivo ? ' · ' : ''}${eliminarDocLink(job.id, 'orden-compra')}</div>`
+    ? `${escapeHtml(job.ordenCompra.numero)}<div>${job.ordenCompra.archivo ? docLink(job.id, job.ordenCompra.archivo, 'Ver PDF') : `<button type="button" class="btn-link" data-adjuntar-oc="1" data-job-id="${job.id}">Adjuntar PDF</button>`} · ${eliminarDocLink(job.id, 'orden-compra')}</div>`
     : '<span class="muted">—</span>';
 
   const tdMonto = document.createElement('td');
@@ -398,11 +426,16 @@ function filaTrabajo(job) {
   tdEstado.className = 'c-estado';
   tdEstado.innerHTML = badgeEstado(job);
 
+  const tdAparta = document.createElement('td');
+  tdAparta.className = 'c-aparta';
+  tdAparta.dataset.label = 'Aparta / libre';
+  tdAparta.innerHTML = impuestosUI.celdaApartar(job);
+
   const tdAcciones = document.createElement('td');
   tdAcciones.className = 'acciones c-acc';
   tdAcciones.appendChild(botonesAccion(job));
 
-  tr.append(tdPresupuesto, tdDesc, tdOC, tdMonto, tdMontoIva, tdFactura, tdEstado, tdAcciones);
+  tr.append(tdPresupuesto, tdDesc, tdOC, tdMonto, tdMontoIva, tdFactura, tdEstado, tdAparta, tdAcciones);
   return tr;
 }
 
@@ -411,7 +444,7 @@ function botonesAccion(job) {
   wrap.className = 'acciones';
 
   if (!job.ordenCompra) {
-    wrap.appendChild(crearBoton('Subir OC', 'btn-outline', () => abrirModalOrdenCompra(job)));
+    wrap.appendChild(crearBoton('Cargar OC', 'btn-outline', () => abrirModalOrdenCompra(job)));
   } else if (!job.factura) {
     wrap.appendChild(crearBoton('Subir factura', 'btn-outline', () => abrirModalFactura(job)));
   } else if (job.estado !== 'pagado') {
@@ -629,17 +662,17 @@ function abrirModalOrdenCompra(job) {
   const inputFile = document.createElement('input');
   inputFile.type = 'file';
   inputFile.accept = 'application/pdf';
-  inputFile.required = true;
 
   const inputNumero = document.createElement('input');
   inputNumero.type = 'text';
-  inputNumero.placeholder = 'ej. OC-4521';
+  inputNumero.placeholder = 'ej. 123456-000-OP';
   inputNumero.required = true;
+  if (job.ordenCompra) inputNumero.value = job.ordenCompra.numero;
 
-  const estadoExtraccion = status(`Presupuesto ${job.presupuesto.numero}. Eleji el PDF de la orden de compra.`);
+  const estadoExtraccion = status(`Presupuesto ${job.presupuesto.numero}. Escribi solo el numero, o subi el PDF y se lee solo.`);
   const candCodigo = contenedorCandidatos();
 
-  form.appendChild(fieldGroup('Documento PDF de la orden de compra', inputFile));
+  form.appendChild(fieldGroup('Documento PDF de la orden de compra (opcional)', inputFile));
   form.appendChild(estadoExtraccion);
   form.appendChild(fieldGroup('Numero de orden de compra', inputNumero));
   form.appendChild(candCodigo);
@@ -680,7 +713,6 @@ function abrirModalOrdenCompra(job) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!archivoElegido) { toast('Elegi un PDF', true); return; }
     try {
       await adjuntarOrdenCompra(job, { numeroOrdenCompra: inputNumero.value, file: archivoElegido });
       toast('Orden de compra guardada');
@@ -691,7 +723,7 @@ function abrirModalOrdenCompra(job) {
     }
   });
 
-  abrirModal('Subir orden de compra', form);
+  abrirModal(job.ordenCompra ? 'Orden de compra' : 'Cargar orden de compra', form);
 }
 
 // ---------- modal: factura ----------
@@ -817,6 +849,9 @@ function abrirModalOrdenPago(job) {
   form.appendChild(fieldGroup('Fecha de pago', inputFecha));
   form.appendChild(candFecha);
 
+  const retencionesCampos = impuestosUI.camposRetenciones();
+  form.appendChild(retencionesCampos.elemento);
+
   inputFile.addEventListener('change', async () => {
     const file = inputFile.files[0];
     if (!file) return;
@@ -848,7 +883,8 @@ function abrirModalOrdenPago(job) {
     e.preventDefault();
     if (!archivoElegido) { toast('Elegi un PDF', true); return; }
     try {
-      await adjuntarOrdenPago(job, { fechaPago: inputFecha.value, file: archivoElegido });
+      const retenciones = retencionesCampos.leer();
+      await adjuntarOrdenPago(job, { fechaPago: inputFecha.value, file: archivoElegido, retenciones });
       toast('Trabajo marcado como pagado');
       cerrarModal();
       cargarTrabajos();
@@ -920,6 +956,12 @@ function abrirModalEditar(job) {
     form.appendChild(fieldGroup('Monto confirmado con IVA (factura)', inputMontoFactura));
   }
 
+  let retencionesCampos = null;
+  if (job.pago && job.pago.pagado) {
+    retencionesCampos = impuestosUI.camposRetenciones(job.pago.retenciones || {});
+    form.appendChild(retencionesCampos.elemento);
+  }
+
   const acciones = document.createElement('div');
   acciones.className = 'form-actions';
   acciones.append(
@@ -954,6 +996,7 @@ function abrirModalEditar(job) {
     }
 
     try {
+      if (retencionesCampos) patch.pago = { retenciones: retencionesCampos.leer() };
       await editarJob(job, patch);
       toast('Cambios guardados');
       cerrarModal();
