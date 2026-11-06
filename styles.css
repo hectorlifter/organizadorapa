@@ -514,3 +514,17 @@ td.vacio, td.muted { color: var(--text-muted); font-style: italic; }
   .resumen-tabla th, .resumen-tabla tbody td { display: table-cell; padding: 6px 6px; font-size: 0.76rem; border-bottom: 1px solid var(--border); }
   .resumen-tabla tbody td.num { text-align: right; font-weight: 400; }
 }
+
+/* ---------- PC con pantalla chica o zoom: que entre sin salirse ---------- */
+.topbar { flex-wrap: wrap; gap: 10px; }
+.topbar > div { flex-wrap: wrap; }
+@media (min-width: 721px) and (max-width: 1500px) {
+  .topbar { padding: 14px 16px; }
+  main { padding: 16px 16px 48px; max-width: none; }
+  table { min-width: 0; font-size: 0.82rem; }
+  thead th { padding: 10px 8px; font-size: 0.68rem; }
+  tbody td { padding: 10px 8px; }
+  .desc-cell { min-width: 150px; max-width: 230px; }
+  .c-aparta .hint { max-width: 160px; }
+  .c-acc .btn { padding: 6px 9px; font-size: 0.76rem; }
+}
